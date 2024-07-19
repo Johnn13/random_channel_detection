@@ -47,13 +47,13 @@ classdef cpacket < handle
             max_height_index = ref_pk_height_trking > max_height*max_height_thresold;
             max_height_number = sum(max_height_index);
             switch max_height_number
-                case 13
+                case {12,13,14}
                     obj.SF = detect_configs(1) - 4;
                     obj.BW = detect_configs(2)/4;
                 
-                case 9
-                    obj.SF = detect_configs(1) - 4;
-                    obj.BW = detect_configs(2)/4;
+                case {8,9,10}
+                    obj.SF = detect_configs(1) - 2;
+                    obj.BW = detect_configs(2)/2;
                     
                 case {1,2,3}
                     obj.SF = detect_configs(1); 

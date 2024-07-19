@@ -5,12 +5,14 @@ classdef csymbol < handle
         pk_idx_trking;
         pk_height_trking;
         pkt_id;
+        demod_win_trking;
     end
     % 在该类提供修改 pk_idx_trking 和 pk_height_trking 的方法
     methods
-        function obj = csymbol(pk_idx_trking, pk_height_trking)
+        function obj = csymbol(pk_idx_trking, pk_height_trking, demod_win_trking)
             obj.pk_idx_trking = pk_idx_trking;
             obj.pk_height_trking = pk_height_trking;
+            obj.demod_win_trking = demod_win_trking;
         end
 
         function belong(obj, id)
@@ -27,6 +29,11 @@ classdef csymbol < handle
             fprintf('\n[peak] height tracking: ');
             for i = 1:length(obj.pk_height_trking)
                 fprintf('%6.2f--> ',obj.pk_height_trking(i));
+            end
+            fprintf('\n');
+            fprintf('\n[demod window] window number tracking: ');
+            for i = 1:length(obj.demod_win_trking)
+                fprintf('%6.2f--> ',obj.demod_win_trking(i));
             end
             fprintf('\n');
         end

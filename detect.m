@@ -11,7 +11,7 @@ function [cpacket_list] = detect(sig, ii)
     UC = chirp(true, SF, BW, Fs, 0);
     DC = chirp(false, SF, BW, Fs, 0);
     detect_samp = 2 ^ SF * Fs / BW;
-    detect_rate = 16;
+    detect_rate = detect_configs(12);
     detect_step = detect_samp/detect_rate;
 %     sample_num_per_symbol = param_configs(9);
 
@@ -70,7 +70,7 @@ function [cpacket_list] = detect(sig, ii)
             % tmp_symbols 是一个cell数据类型,里面的每个元素都是一个symbol的峰值序列
             for jj = 1:length(tmp_symbols)
                 % 遍历cell,对每个symbol进行操作,形成csymbol数据类型
-                csym = save_csymbol(tmp_symbols{jj},dc_pk_res_trking);
+                csym = save_csymbol(tmp_symbols{jj},dc_pk_res_trking, round(i/detect_step));
                 dc_csymbols_list = [dc_csymbols_list csym];
             end
         end
@@ -79,7 +79,7 @@ function [cpacket_list] = detect(sig, ii)
         tmp_symbols = extract_symbol(threed2twod(uc_pk_res_trking),-pk_step_bin); % 注意这里是负的步长
         if ~isempty(tmp_symbols)
             for jj = 1:length(tmp_symbols)
-                csym = save_csymbol(tmp_symbols{jj},uc_pk_res_trking);
+                csym = save_csymbol(tmp_symbols{jj},uc_pk_res_trking, round(i/detect_step));
                 uc_csymbol_list = [uc_csymbol_list csym];
             end
         end

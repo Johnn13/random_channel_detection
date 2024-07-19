@@ -23,6 +23,7 @@ function par = detect_config(id)
     bin_gap_list = [];
 
     max_height_thresold = 0.9;
+    detect_rate = 16;
 
     % detect fft variables
     zero_padding = 1;
@@ -50,6 +51,8 @@ function par = detect_config(id)
             par = max_height_thresold;
         case 11,
             par = zero_padding;
+        case 12,
+            par = detect_rate;
         otherwise,
     end
 

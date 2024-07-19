@@ -42,36 +42,53 @@ function [cpacket_list] = extract_packet(dc_csymbols_list,uc_csymbols_list)
     end
     cpacket_list = cpacket_list(leg_index);
     % 将downchirp对应csymbol也放进cpacket中
+    % 对downchirp，要遍历cpacket中所有可能的preamble chirp进行比较
     for i = 1:length(uc_csymbols_list)
         if length(cpacket_list) == 0
             warning("no legitimate cpacket, but having downchirp csymbol!")
             break
         end
+        matched = false;
         for j = 1:length(cpacket_list)
-            tmp_cpkt = cpacket_list(j);
-            tmp_preamble_csym = tmp_cpkt.preamble_symbols(1);
-            icm = is_csymbol_match(tmp_preamble_csym, uc_csymbols_list(i));
-            if icm
-                tmp_cpkt.downchirp_symbols = [tmp_cpkt.downchirp_symbols uc_csymbols_list(i)];
-                break
+            if matched 
+                break;
             end
+            
+            tmp_cpkt = cpacket_list(j);
+            for k = 1:length(tmp_cpkt.preamble_symbols)
+                tmp_preamble_csym = tmp_cpkt.preamble_symbols(k);
+                if is_csymbol_match(tmp_preamble_csym, uc_csymbols_list(i),true)
+                    tmp_cpkt.downchirp_symbols = [tmp_cpkt.downchirp_symbols uc_csymbols_list(i)];
+                    matched = true;
+                    break
+                end
+            end  
         end
     end
     
     for i = 1:length(cpacket_list)
         cpacket_list(i).init();
+        cpacket_list(i).show();
     end
 
 end
 
 function y = is_csymbol_match(csym_1, csym_2,up_with_down)
     % 原则: 来自相同cpacket的csymbol的index和height理论上一样
+    
+    if nargin > 2 && up_with_down
+        z1 = csym_1.demod_win_trking;
+        z2 = csym_2.demod_win_trking;
+        win_trking_diff = mean(z1 - z2);
+        if sum(abs(win_trking_diff)==detect_configs(12)./[1 2 4]) == 1
+            y = true;
+        else
+            y = false;
+        end
+        return
+    end
     x1 = csym_1.pk_idx_trking;
     y1 = csym_1.pk_height_trking;
-    if nargin > 2 && up_with_down
-        x1 = filp(x1);
-        y1 = filp(y1);
-    end
     x2 = csym_2.pk_idx_trking;
     y2 = csym_2.pk_height_trking;
     if length(x1) == length(x2) && length(y1) == length(y2)
@@ -81,7 +98,8 @@ function y = is_csymbol_match(csym_1, csym_2,up_with_down)
 %                 disp([mfilename '[FUNCTION DEBUG]'])
 %                 disp(['[DEBUG] idx_trking_diff: ' num2str(idx_trking_diff)])
 %                 disp(['[DEBUG] height_trking_diff: ' num2str(height_trking_diff)])
-        if idx_trking_diff < 10 && height_trking_diff < 500
+        if abs(idx_trking_diff) < 10  
+%             && height_trking_diff < 500
             % match!
             y = true;
             return

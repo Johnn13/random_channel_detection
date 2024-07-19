@@ -1,4 +1,4 @@
-function symbols= extract_symbols(pk_res_trking, pk_step_bin)
+function symbols= extract_symbol(pk_res_trking, pk_step_bin)
     % 该函数用来获取峰值追踪集合中，是否有潜在的 symbols
     % 判断 symbols 的依据：在多个demod window 的 fft 结果中是否有符合规律的 fft bin
     % 使用3个指针协助追踪峰值:
@@ -12,6 +12,7 @@ function symbols= extract_symbols(pk_res_trking, pk_step_bin)
     % 输入：
     %    pk_res_trking:连续窗口的 fft 结果，每一列为一次 fft 结果
     %    pk_step_bin: 连续的窗口中，峰值位置的差距  
+    %    step_number: 用来表示此时位于哪一步了
     % 输出：
     %    symbols: symbols包含了一个或多个symbol,多个symbols被放进了一个cell数据类型中
     %             一个symbol由一个峰值追踪序列构成
