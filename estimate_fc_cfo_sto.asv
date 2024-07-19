@@ -10,7 +10,6 @@ function [fc, cfo, sto] = estimate_fc_cfo_sto(cpacket_list)
     % FFT params
     zero_padding = detect_configs(11);
     nfft = N*zero_padding;
-%     pk_step_bin = detect_nbin / detect_rate * BW / Fs * zero_padding; 
 
     for i = 1:length(cpacket_list)
         % 逐个对 cpacket_list 中的 cpacket 进行处理
@@ -21,19 +20,20 @@ function [fc, cfo, sto] = estimate_fc_cfo_sto(cpacket_list)
         % 只取完全落在demod window 中的peak进行估计
         x1 = filter_by_threshold(up_csym);
         x2 = filter_by_threshold(dn_csym);
-        x3 = x1+x2;
-        x4 = x2-x1;
+        [x3 x4] = arrayOperations(x1,x2);
+%         x3 = x1+x2;
+%         x4 = x2-x1;
         
         % fc_offset_bin 为中心频率偏移导致的bin偏移,并根据bin偏移量算出实际的中心频率偏移量
         % win_offset_bin 为窗口偏移量导致的bin偏移,并根据bin偏移量算出实际的采样点偏移量
         fc_offset_bin = mean(x3/2) - nfft/2;
         win_offset_bin = mean(x4/2);
-        fc = mod(fc_offset_bin - 1, nfft) / nfft * Fs;
+        fc = (fc_offset_bin - 1) / nfft * Fs;
         win_offset = win_offset_bin / zero_padding * Fs / BW;
-        cpkt.win_offset = 
+        cpkt.fc_offset = fc;
+        cpkt.win_offset = win_offset;
     end
 end
-
 
 function y = filter_by_threshold(csym)
     % 根据detect_config中对max_height_thresold的定义
@@ -47,3 +47,25 @@ function y = filter_by_threshold(csym)
     y = csym.pk_idx_trking(max_height_index);
 end
 
+function [sum_result, diff_result] = arrayOperations(x1, x2)
+    % 确定较短的数组长度
+    min_length = min(length(x1), length(x2));
+    
+    % 初始化结果数组
+    sum_result = zeros(1, min_length);
+    diff_result = zeros(1, min_length);
+    
+    % 如果x1较长，取其中间元素
+    if length(x1) > length(x2)
+        start_idx = floor((length(x1) - min_length) / 2) + 1;
+        x1 = x1(start_idx : start_idx + min_length - 1);
+    % 如果x2较长，取其中间元素
+    elseif length(x2) > length(x1)
+        start_idx = floor((length(x2) - min_length) / 2) + 1;
+        x2 = x2(start_idx : start_idx + min_length - 1);
+    end
+    
+    % 逐元素相加和相减
+    sum_result = x1 + x2;
+    diff_result = x1 - x2;
+end

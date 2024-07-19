@@ -65,6 +65,7 @@ classdef cpacket < handle
             % 由于这三者无法解耦，只能通过upchirp和downchirp的结合才能算出
             tmp_pk_idx_trking = ref_symbol.pk_idx_trking(max_height_index);
 
+            % 在一些场景下, downchirp 和 upchirp 的峰值个数不一样,需要做修正
             
         end
 
