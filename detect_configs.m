@@ -15,7 +15,7 @@ function par = detect_config(id)
 
     BW_min = 125e3;
     SF_min = 8; 
-    Detect_th = 1000;
+    Detect_th = 900;
     peak_tor = 2;
     MaxPeakNum = 135;
     SymbolNum = 200;

@@ -79,8 +79,14 @@ function y = is_csymbol_match(csym_1, csym_2,up_with_down)
     if nargin > 2 && up_with_down
         z1 = csym_1.demod_win_trking;
         z2 = csym_2.demod_win_trking;
+        if length(z1) ~= length(z2)
+            y = false;
+            return
+        end
         win_trking_diff = mean(z1 - z2);
-        if sum(abs(win_trking_diff)==detect_configs(12)./[1 2 4]) == 1
+        leg_win_gap = detect_configs(12)./[1 2 4];
+        leg_win_gap = [leg_win_gap*3 leg_win_gap];
+        if sum(abs(win_trking_diff)==leg_win_gap) == 1
             y = true;
         else
             y = false;
@@ -98,7 +104,7 @@ function y = is_csymbol_match(csym_1, csym_2,up_with_down)
 %                 disp([mfilename '[FUNCTION DEBUG]'])
 %                 disp(['[DEBUG] idx_trking_diff: ' num2str(idx_trking_diff)])
 %                 disp(['[DEBUG] height_trking_diff: ' num2str(height_trking_diff)])
-        if abs(idx_trking_diff) < 10  
+        if abs(idx_trking_diff) < length(x1)*2 
 %             && height_trking_diff < 500
             % match!
             y = true;

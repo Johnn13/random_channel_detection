@@ -20,7 +20,7 @@ function par = param_configs(id)
     SYNC2 = 16;
     
     path = '../../sig/ideal_sig/';            % Add path to the file
-    fil_nm = 'Freq915_BW125_Fs1e6_SF8_CR1_header1_crc1.cfile';                    % File name
+    fil_nm = 'Freq915_BW250_Fs1e6_SF10_CR1_header1_crc1.cfile';                    % File name
     
     sample_num_per_symbol = Fs / LORA_BW * 2 ^ LORA_SF;
     win_step = sample_num_per_symbol/16;
