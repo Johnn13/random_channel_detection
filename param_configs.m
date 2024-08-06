@@ -2,10 +2,10 @@ function par = param_configs(id)
 
     % LoRa PHY transmitting parameters
     LORA_SF = 9;%12;            % LoRa spreading factor
-    LORA_BW = 250e3;%125e3;        % LoRa bandwidth
+    LORA_BW = 125e3;%125e3;        % LoRa bandwidth
     
     % Receiving device parameters
-    Fs = 1e6;%125e3*8;  % recerver's sampling rate 
+    Fs = 2e6;%125e3*8;  % recerver's sampling rate 
     num_preamble = 8;       % num of Preamble Base Upchirps in a Lora Pkt
     num_sync = 2;
     num_DC = 2.25;
@@ -19,8 +19,8 @@ function par = param_configs(id)
     SYNC1 = 8;
     SYNC2 = 16;
     
-    path = '../../sig/ideal_sig/';            % Add path to the file
-    fil_nm = 'Freq915_BW250_Fs1e6_SF10_CR1_header1_crc1.cfile';                    % File name
+    path = '../../sig/IoTJ_exp/';            % Add path to the file
+    fil_nm = 'P1_FC9168_SF9_BW125_CR4.cfile';                    % File name
     
     sample_num_per_symbol = Fs / LORA_BW * 2 ^ LORA_SF;
     win_step = sample_num_per_symbol/16;

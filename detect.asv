@@ -1,4 +1,4 @@
-function [preamble_list, symbol_list] = detect(sig, ii)
+function [cpacket_list] = detect(sig, ii)
 
     % detect window params
     SF = detect_configs(1);
@@ -11,12 +11,12 @@ function [preamble_list, symbol_list] = detect(sig, ii)
     UC = chirp(true, SF, BW, Fs, 0);
     DC = chirp(false, SF, BW, Fs, 0);
     detect_samp = 2 ^ SF * Fs / BW;
-    detect_rate = 16;
+    detect_rate = detect_configs(12);
     detect_step = detect_samp/detect_rate;
 %     sample_num_per_symbol = param_configs(9);
 
     % FFT params
-    zero_padding = 1;
+    zero_padding = detect_configs(11);
     detect_nbin = detect_samp * zero_padding;
     pk_step_bin = detect_nbin / detect_rate * BW / Fs * zero_padding; 
 
@@ -31,13 +31,14 @@ function [preamble_list, symbol_list] = detect(sig, ii)
 
     % detect params
     pk_res = zeros(detect_nbin,2);   % 用来存储1次 fft 的结果(index,value)
-    pk_res_trking = repmat(pk_res, 1, 1, 2*detect_rate+1);  % 用来存储2*detect_rate-1+2次 fft 的结果(index,value,times)
-    csymbol_list = [];
-
+    dc_pk_res_trking = repmat(pk_res, 1, 1, 2*detect_rate+1);  % 用来存储2*detect_rate-1+2次 fft 的结果(index,value,times)
+    uc_pk_res_trking = repmat(pk_res, 1, 1, 2*detect_rate+1);
+    dc_csymbols_list = [];
+    uc_csymbol_list = [];
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     win_num = 1;
     for i = ii:detect_step:length(sig) - detect_samp
-        disp(['win num: ' num2str(win_num)])
+%         disp(['win num: ' num2str(win_num)])
         win_num = win_num + 1;
         sig_dw = sig(i:i + detect_samp - 1);
         % 分别使用 UC 和 DC 进行dechirp
@@ -45,6 +46,7 @@ function [preamble_list, symbol_list] = detect(sig, ii)
         uc_fr = abs(fftshift(fft(sig_dw .* UC,detect_nbin)));
         
         debug_sig(sig_dw,false,SF,BW,Fs);
+        cal_snr(sig_dw .* DC, Fs, BW, SF);
         tmp_dc_pk_res = pk_res;
         tmp_uc_pk_res = pk_res;
         dc_pks = get_peak(dc_fr,detect_th);
@@ -69,164 +71,29 @@ function [preamble_list, symbol_list] = detect(sig, ii)
             % tmp_symbols 是一个cell数据类型,里面的每个元素都是一个symbol的峰值序列
             for jj = 1:length(tmp_symbols)
                 % 遍历cell,对每个symbol进行操作,形成csymbol数据类型
-                csym = save_csymbol(tmp_symbols{jj},dc_pk_res_trking);
-                csymbol_list = [csymbol_list csym];
+                csym = save_csymbol(tmp_symbols{jj},dc_pk_res_trking, round(i/detect_step));
+                dc_csymbols_list = [dc_csymbols_list csym];
             end
         end
-            
-
+        
+        % 2. downchirp symbols
+        tmp_symbols = extract_symbol(threed2twod(uc_pk_res_trking),-pk_step_bin); % 注意这里是负的步长
+        if ~isempty(tmp_symbols)
+            for jj = 1:length(tmp_symbols)
+                csym = save_csymbol(tmp_symbols{jj},uc_pk_res_trking, round(i/detect_step));
+                uc_csymbol_list = [uc_csymbol_list csym];
+            end
+        end
     end
     
     % 查看symbols中的symbol
-    clc 
-    for i = 1:length(csymbol_list)
-        tmp_csym = csymbol_list(i);
-        tmp_csym.show();
-    end
-    clc
-    close all
+%     for i = 1:length(dc_csymbols_list)
+%         tmp_csym = dc_csymbols_list(i);
+%         tmp_csym.show();
+%     end
 
     % 根据preamble的特性,从symbols中检测潜在的数据包
     cpacket_list = [];
-    cpacket_list = extract_packet(csymbol_list);
-
-    
-       
-%         for j = 1:size(pks, 1)
-%             % check if the peak belongs to one of symbol
-%             isNewSymbol = true;
-% 
-%             for k = 1:length(cur_symbol_list)
-% 
-%                 if (cur_symbol_list(k).state == 0)
-%                     dis = mod(pks(j, 1) - win_step_bin - cur_symbol_list(k).peak_list(end, 1), N);
-% 
-%                     if (dis < dis_tolerance || dis >= N - dis_tolerance)
-%                         % add peak to this symbol
-%                         peak_xyz_list = [pks(j, :), (i - ii) / win_step];
-%                         cur_symbol_list(k).peak_list = [cur_symbol_list(k).peak_list; peak_xyz_list];
-%                         cur_symbol_list(k).state = 1;
-%                         isNewSymbol = false;
-%                         break;
-%                     end
-% 
-%                 end
-% 
-%             end
-% 
-%             if (isNewSymbol)
-%                 % create a new symbol
-%                 peak_xyz_list = [pks(j, :), (i - ii) / win_step];
-%                 tmp_symbol = struct('peak_list', peak_xyz_list, 'state', 1);
-%                 cur_symbol_list = [cur_symbol_list tmp_symbol];
-%             end
-% 
-%         end
-
-        % check whther the symbol is updated
-%         pos = [];
-% 
-%         for j = 1:length(cur_symbol_list)
-% 
-%             if (cur_symbol_list(j).state == 0)
-%                 % figure;
-%                 % x = cur_symbol_list(j).peak_list(:,1);
-%                 % y = cur_symbol_list(j).peak_list(:,2);
-%                 % plot(x, y,'linewidth', 1.5);
-%                 symbol_list = [symbol_list; cur_symbol_list(j)];
-%             else
-%                 pos = [pos j];
-%                 cur_symbol_list(j).state = 0;
-%             end
-% 
-%         end
-% 
-%         cur_symbol_list = cur_symbol_list(pos);
-
-    % fiter illegtimate symbol(peak number < min)
-%     legitiamte_idx = [];
-% 
-%     for i = 1:length(symbol_list)
-% 
-%         if (length(symbol_list(i).peak_list) >= 16)
-%             legitiamte_idx = [legitiamte_idx; i];
-%         end
-% 
-%     end
-% 
-%     symbol_list = symbol_list(legitiamte_idx, :);
-% 
-%     clear cur_symbol_list tmp_symbol legitiamte_idx
-% 
-%     % detect potential packet
-%     for i = 1:length(symbol_list)
-%         isNewPreamble = true;
-% 
-%         for j = 1:length(preamble_list)
-%             temp_preamble = preamble_list(j);
-%             last_symbol = temp_preamble.p_symbol_list(end, :, :);
-% 
-%             if (size(last_symbol.peak_list, 1) == size(symbol_list(i).peak_list, 1))
-%                 idx_dis = last_symbol.peak_list(:, 1) - symbol_list(i).peak_list(:, 1);
-%                 amp_dis = last_symbol.peak_list(:, 2) - symbol_list(i).peak_list(:, 2);
-%                 win_dis = last_symbol.peak_list(:, 3) - symbol_list(i).peak_list(:, 3);
-%             else
-%                 continue
-%             end
-% 
-%             bin_tolerance = 2;
-%             amp_tolerance = 0.2;
-% 
-%             if (sum(abs(idx_dis) > bin_tolerance) < 2 && sum(win_dis ~= -4) < 1 && sum(amp_dis ./ last_symbol.peak_list(:, 2) > amp_tolerance) < 2)
-%                 % Append the symbol to the last column of this packet
-%                 isNewPreamble = false;
-%                 temp_preamble.p_symbol_list = [temp_preamble.p_symbol_list; symbol_list(i)];
-%                 preamble_list(j) = temp_preamble;
-%                 break
-%             end
-% 
-%         end
-% 
-%         if (isNewPreamble)
-%             % create a new Preamble, one row means a preamble, each column means its symbol
-%             % and add into preamble_list
-%             clear preamble
-%             preamble.p_symbol_list = symbol_list(i);
-%             preamble_list = [preamble_list; preamble];
-%         end
-% 
-%     end
-% 
-%     % clear temp_preamble
-%     % filter illegitimate preamble
-%     legitiamte_idx = [];
-% 
-%     for i = 1:length(preamble_list)
-% 
-%         if (length(preamble_list(i).p_symbol_list) >= num_preamble - 2)
-%             legitiamte_idx = [legitiamte_idx; i];
-%         end
-% 
-%     end
-% 
-%     preamble_list = preamble_list(legitiamte_idx);
-% 
-%     % anlyze the paramters of each preamble
-%     % eq: (19+1)*win_step - dw_win = chirp_len
-%     for i = 1:length(preamble_list)
-%         temp_symbol_list = preamble_list(i).p_symbol_list;
-%         a = size(temp_symbol_list(1).peak_list, 1);
-%         chirp_len = (a + 1) * win_step - detect_samp;
-%         b = detect_samp / chirp_len;
-% 
-%         if (b > 1)
-%             preamble_list(i).SF = SF - b;
-% 
-%         else
-%             preamble_list(i).SF = SF;
-%         end
-% 
-%         preamble_list(i).BW = BW / b;
-%     end
+    cpacket_list = extract_packet(dc_csymbols_list,uc_csymbol_list);
 
 end

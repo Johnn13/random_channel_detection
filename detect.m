@@ -6,6 +6,7 @@ function [cpacket_list] = detect(sig, ii)
     Fs = detect_configs(3);
     num_preamble = detect_configs(4);
     detect_th = detect_configs(7);
+    MaxPeakNum = detect_configs(8);
 
     N = 2 ^ SF * Fs / BW;
     UC = chirp(true, SF, BW, Fs, 0);
@@ -46,15 +47,21 @@ function [cpacket_list] = detect(sig, ii)
         uc_fr = abs(fftshift(fft(sig_dw .* UC,detect_nbin)));
         
 %         debug_sig(sig_dw,false,SF,BW,Fs);
+%         cal_snr(sig_dw .* DC, Fs, BW, SF);
         tmp_dc_pk_res = pk_res;
         tmp_uc_pk_res = pk_res;
-        dc_pks = get_peak(dc_fr,detect_th);
-        uc_pks = get_peak(uc_fr,detect_th);
-
-        for it = 1:size(dc_pks,1)    
+        dc_pks = get_peak(dc_fr,detect_th, MaxPeakNum);
+        uc_pks = get_peak(uc_fr,detect_th, MaxPeakNum);
+%         dc_pks
+%         uc_pks
+        for it = 1:size(dc_pks,1) 
+%             debug_sig(sig_dw,false,SF,BW,Fs);
+%             cal_snr(sig_dw .* DC, Fs, BW, SF);
             tmp_dc_pk_res(dc_pks(it),:) = [1 dc_pks(it,2)];
         end
-        for it = 1:size(uc_pks,1)    
+        for it = 1:size(uc_pks,1)   
+%             debug_sig(sig_dw,true,SF,BW,Fs);
+%             cal_snr(sig_dw .* UC, Fs, BW, SF);
             tmp_uc_pk_res(uc_pks(it),:) = [1 uc_pks(it,2)];
         end
         dc_pk_res_trking(:,:,1) = [];

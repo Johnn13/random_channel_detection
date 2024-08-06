@@ -1,8 +1,10 @@
-function [ac_wind] = active_wind_detect(x_1)
+function [ac_wind] = active_sess_detect(x_1)
+    % 该函数用最大的解调窗口进行信号截取
 
-    SF = param_configs(1);
-    BW = param_configs(2);
-    Fs = param_configs(3);
+
+    SF = detect_configs(1);
+    BW = detect_configs(2);
+    Fs = detect_configs(3);
     N = 2^SF;
     upsampling_factor = Fs/BW;
     n_samp = N * upsampling_factor;
@@ -18,13 +20,12 @@ function [ac_wind] = active_wind_detect(x_1)
     for i = 1:floor(length(x_1)/n_samp)
         wind = x_1((i-1)*n_samp + (1:n_samp));
         wind_fft = abs(fft(wind .* DC));
-        debug_sig(wind, false , SF, BW, Fs);
-        wind_fft = wind_fft(1:N) + wind_fft(end-N+1:end);
-        % wind_fft = wind_fft([1:N/2 (N/2 + (upsampling_factor-1)*N)+1:(upsampling_factor)*N]);    
+%         wind_fft = wind_fft(1:N) + wind_fft(end-N+1:end);
+%         debug_sig(wind, false, SF, BW, Fs);
         noise_floor = mean(wind_fft);
         fft_peak = max(wind_fft);
         peak_gain = [peak_gain fft_peak];
-        amp_thresh = [amp_thresh 8*noise_floor];
+        amp_thresh = [amp_thresh 30*noise_floor];
         if (fft_peak > amp_thresh(end))
             if(i > last_wind)
                 if(i-back_buf < 1)

@@ -27,9 +27,9 @@ function [cpacket_list] = extract_packet(dc_csymbols_list,uc_csymbols_list)
         end
     end
 
-    for i = 1:length(cpacket_list)
-        cpacket_list(i).show();
-    end
+%     for i = 1:length(cpacket_list)
+%         cpacket_list(i).show();
+%     end
 
     % 消除异常的cpacket
     % 原则: cpacket的preamble_symbols长度非法
@@ -97,19 +97,33 @@ function y = is_csymbol_match(csym_1, csym_2,up_with_down)
     y1 = csym_1.pk_height_trking;
     x2 = csym_2.pk_idx_trking;
     y2 = csym_2.pk_height_trking;
-    if length(x1) == length(x2) && length(y1) == length(y2)
-        idx_trking_diff = sum(x1 - x2); 
-        height_trking_diff = sum(y1 - y2); 
-%                 fprintf('\n');
-%                 disp([mfilename '[FUNCTION DEBUG]'])
-%                 disp(['[DEBUG] idx_trking_diff: ' num2str(idx_trking_diff)])
-%                 disp(['[DEBUG] height_trking_diff: ' num2str(height_trking_diff)])
-        if abs(idx_trking_diff) < length(x1)*2 
-%             && height_trking_diff < 500
+    z1 = csym_1.demod_win_trking;
+    z2 = csym_2.demod_win_trking;
+
+    if abs(length(x1) - length(x2))<3
+        idx_trking_diff = array_diff(x1,x2);
+        win_trking_diff = mean(array_diff(z1,z2));
+        leg_win_gap = detect_configs(12)./[1 2 4];
+        if sum(idx_trking_diff) < length(x1)*2  && sum(abs(win_trking_diff)==leg_win_gap) == 1
             % match!
             y = true;
             return
         end
     end
+
+%     if length(x1) == length(x2) && length(y1) == length(y2)
+%         idx_trking_diff = sum(x1 - x2); 
+%         height_trking_diff = sum(y1 - y2); 
+%                 fprintf('\n');
+%                 disp([mfilename '[FUNCTION DEBUG]'])
+%                 disp(['[DEBUG] idx_trking_diff: ' num2str(idx_trking_diff)])
+%                 disp(['[DEBUG] height_trking_diff: ' num2str(height_trking_diff)])
+%         if abs(idx_trking_diff) < length(x1)*2 
+%             && height_trking_diff < 500
+            % match!
+%             y = true;
+%             return
+%         end
+%     end
     y = false;
 end

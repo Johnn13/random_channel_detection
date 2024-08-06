@@ -20,8 +20,9 @@ function [pk_hight,pk_index] = debug_sig(wind,down,SF,BW,Fs)
     
     % ==== 计算出峰值的位置,以在图像中标出
     detect_th = detect_configs(7);
-    pks1 = get_peak(orig_fft_, detect_th);
-    pks2 = get_peak(orig_fft_shift, detect_th);
+    MaxPeakNum = detect_configs(8);
+    pks1 = get_peak(orig_fft_, detect_th, MaxPeakNum);
+    pks2 = get_peak(orig_fft_shift, detect_th, MaxPeakNum);
     
     figure;
     set (gcf,'position',[500,300,1200,550] );

@@ -6,24 +6,25 @@ function par = detect_config(id)
 % MaxPeakNum: maximum number of peaks after threshold decision
 % SymbolNum: maximum number of symbols in payload
 
-    LORA_SF = 12;
-    LORA_BW = 500e3;
-    Fs = 1e6;
-    num_preamble = 8;
+    LORA_SF = 9;
+    LORA_BW = 125e3;
+    Fs = 2e6;
+    num_preamble = 5;
     num_sync = 2;
     num_DC = 2.25;
 
     BW_min = 125e3;
     SF_min = 8; 
-    Detect_th = 900;
+    
     peak_tor = 2;
-    MaxPeakNum = 135;
+    Detect_th = 100;
+    MaxPeakNum = 20;
     SymbolNum = 200;
 
     bin_gap_list = [];
 
     max_height_thresold = 0.9;
-    detect_rate = 16;
+    detect_rate = 8;
 
     % detect fft variables
     zero_padding = 1;

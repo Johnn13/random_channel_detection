@@ -40,27 +40,39 @@ classdef cpacket < handle
             %   SF10的peak height达到最高有9个;
             %   SF12的peak height达到最高有1个.
             max_height_thresold = detect_configs(10);
-            ref_symbol = obj.preamble_symbols(end);
+            ref_symbol = obj.preamble_symbols(1);
             ref_pk_height_trking = ref_symbol.pk_height_trking;
             [max_height, ~] = max(ref_pk_height_trking);
             % 求出ref_pk_height_trking中那些值与最大值差不多大的个数
             max_height_index = ref_pk_height_trking > max_height*max_height_thresold;
             max_height_number = sum(max_height_index);
+            % 用第二大的窗口解调的结果
             switch max_height_number
-                case {12,13,14}
-                    obj.SF = detect_configs(1) - 4;
-                    obj.BW = detect_configs(2)/4;
-                
-                case {8,9,10}
+                case {4,5,6}
                     obj.SF = detect_configs(1) - 2;
-                    obj.BW = detect_configs(2)/2;
-                    
+                    obj.BW = detect_configs(2)/2;     
                 case {1,2,3}
                     obj.SF = detect_configs(1); 
                     obj.BW = detect_configs(2);
                 otherwise
                     warning(" illegimate max_height_number");
             end
+
+%             switch max_height_number
+%                 case {12,13,14}
+%                     obj.SF = detect_configs(1) - 4;
+%                     obj.BW = detect_configs(2)/4;
+%                 
+%                 case {8,9,10}
+%                     obj.SF = detect_configs(1) - 2;
+%                     obj.BW = detect_configs(2)/2;
+%                     
+%                 case {1,2,3}
+%                     obj.SF = detect_configs(1); 
+%                     obj.BW = detect_configs(2);
+%                 otherwise
+%                     warning(" illegimate max_height_number");
+%             end
             % 根据最大值的peak index来计算中心频率、窗口偏移量、CFO等
             % 由于这三者无法解耦，只能通过upchirp和downchirp的结合才能算出
             tmp_pk_idx_trking = ref_symbol.pk_idx_trking(max_height_index);
